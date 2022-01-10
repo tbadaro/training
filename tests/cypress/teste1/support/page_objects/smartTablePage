@@ -1,0 +1,54 @@
+export class SmartTablePage{
+   
+    changeUserAge(name, newAge){
+        cy.get('tbody').contains('tr', name).then( tableRow => {
+            cy.wrap(tableRow).find('.nb-edit').click()
+            cy.wrap(tableRow).find('[placeholder="Age"]').clear().type(newAge)
+            cy.wrap(tableRow).find('[class="nb-checkmark"]').click()
+            cy.wrap(tableRow).find('td').eq(6).should('contain', newAge)
+        })
+    }
+
+    addNewUser(firstName, lastName, username){
+        cy.get('thead').find('.nb-plus').click()
+        cy.get('thead').find('tr').eq(2).then( tableRow => {
+            cy.wrap(tableRow).find('[placeholder="First Name"]').type(firstName)
+            cy.wrap(tableRow).find('[placeholder="Last Name"]').type(lastName)
+            cy.wrap(tableRow).find('[placeholder="Username"]').type(username)
+            cy.wrap(tableRow).find('[class="nb-checkmark"]').click()            
+        })
+        cy.get('tbody tr').eq(0).find('td').then( tableColumns => {
+            cy.wrap(tableColumns).eq(2).should('contain', firstName)
+            cy.wrap(tableColumns).eq(3).should('contain', lastName)
+            cy.wrap(tableColumns).eq(4).should('contain', username)
+        })
+    }
+
+    searchByAge(){
+        const age = [20, 30, 40, 200]
+
+        cy.wrap(age).each( age => {
+            cy.get('thead [placeholder="Age"]').clear().type(age)
+            cy.wait(500)
+            cy.get('tbody tr').each( tableRow => {
+                if(age > 100){
+                    cy.wrap(tableRow).should('contain', 'No data found')
+                } else {
+                cy.wrap(tableRow).find('td').eq(6).should('contain', age)
+                }
+            })              
+        })
+        cy.get('thead [placeholder="Age"]').clear()
+        cy.wait(500)
+    }
+
+    deleteRowByIndex(index){
+        const stub = cy.stub()
+        cy.on('window:confirm', stub)
+        cy.get('tbody tr').eq(index).find('.nb-trash').click().then(() => {
+            expect(stub.getCall(0)).to.be.calledWith('Are you sure you want to delete?')
+        })
+    }
+}
+
+export const onSmartTablePage = new SmartTablePage()
